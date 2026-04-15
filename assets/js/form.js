@@ -108,3 +108,19 @@ document.getElementById('formCert').addEventListener('submit', async (e) => {
     }
     btn.disabled = false;
 });
+
+function ordenarSelect(selectId) {
+    const select = document.getElementById(selectId);
+    const opcoes = Array.from(select.options);
+
+    // Mantém o "Selecione..." fixo no topo
+    const placeholder = opcoes.shift();
+
+    opcoes.sort((a, b) => a.text.localeCompare(b.text, 'pt-BR'));
+
+    select.innerHTML = '';
+    select.appendChild(placeholder);
+    opcoes.forEach(op => select.appendChild(op));
+}
+
+ordenarSelect('atividade');
