@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AACC — Painel ADM</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.min.css">
+    <link rel="stylesheet" href="assets/css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+</head>
+<body>
+    <img src="assets/image/logo-fatec-capao-bonito.png" alt="Fatec Capão Bonito" class="logo-fatec">
+    <h1>AACC — ADM</h1>
+
+    <div class="importarAlunos">
+        <a href="importar_alunos.html">👥 Importar alunos</a>
+    </div>
+
+    <!-- Filtros -->
+    <div class="filtros">
+        <input type="text" id="filtro-ra" placeholder="Filtrar por R.A.">
+        <input type="text" id="filtro-atividade" placeholder="Filtrar por atividade">
+        <select id="filtro-status">
+            <option value="1" selected>Pendente</option>
+            <option value="2">Aprovado</option>
+            <option value="3">Reprovado</option>
+        </select>
+        <button onclick="aplicarFiltros()">Filtrar</button>
+    </div>
+
+    <div class="lista" id="lista">
+        <p>Carregando...</p>
+    </div>
+    <p id="vazio">Nenhum certificado encontrado.</p>
+
+    <!-- Relatório -->
+    <div id="rel-section">
+        <h2>📊 Relatório de Horas Aprovadas</h2>
+        <table>
+            <thead>
+                <tr><th>RA</th><th>NOME</th><th>CURSO</th><th>ATIVIDADES</th><th>TOTAL</th></tr>
+            </thead>
+            <tbody id="rel-body">
+                <tr><td colspan="5" style="color:rgba(255,255,255,0.5);">Carregando...</td></tr>
+            </tbody>
+        </table>
+        <button id="btn-exportar" onclick="exportarCSV()">⬇ Exportar XLSX</button>
+    </div>
+
+    <button onclick="sair()">← Sair</button>
+
+    <!-- Modal -->
+    <div id="modal">
+        <div id="modal-inner">
+            <img id="modal-img" src="" alt="">
+            <iframe id="modal-pdf" src=""></iframe>
+            <button id="modal-close" onclick="fecharModal()">Fechar</button>
+        </div>
+    </div>
+
+    <script type="module" src="assets/js/adm.js"></script>
+</body>
+</html>

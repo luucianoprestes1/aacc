@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AACC</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.min.css">
+    <link rel="stylesheet" href="assets/css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+</head>
+<body>
+    <img src="assets/image/logo-fatec-capao-bonito.png" alt="Fatec Capão Bonito" class="logo-fatec">
+
+    <div class="topo">
+        <h1>AACC</h1>
+        <span class="material-icons icone" onclick="window.location.href='lista.html'">folder</span>
+    </div>
+
+    <form id="formCert">
+        <label for="data">Data:</label>
+        <input type="date" id="data" required>
+
+        <label for="atividade">Atividade:</label>
+        <select id="atividade" required>
+            <option value="">Selecione a atividade...</option>
+        </select>
+
+        <label for="duracao">Duração (em horas):</label>
+        <input type="number" id="duracao" min="0.5" placeholder="Ex: 4 ou 2.5" required>
+
+        <label for="arquivo">Certificado (em PDF):</label>
+        <input type="file" id="arquivo" accept="application/pdf" required>
+        <div id="preview-wrap">
+            <img id="preview-img">
+            <span id="preview-pdf"></span>
+        </div>
+
+        <p id="msg"></p>
+
+        <div class="botoes">
+            <input type="button" value="Sair" onclick="window.location.href='index.html'">
+            <input type="submit" value="Salvar" id="btnSalvar">
+        </div>
+    </form>
+
+    <script type="module" src="assets/js/form.js"></script>
+</body>
+</html>

@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AACC — Importar Alunos</title>
+    <link rel="stylesheet" href="assets/css/style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        .container { width:90%; max-width:700px; display:flex; flex-direction:column; align-items:center; gap:20px; }
+        .upload-area { width:100%; border:2px dashed rgba(255,255,255,0.4); border-radius:16px; padding:32px 20px; text-align:center; cursor:pointer; transition:0.2s; }
+        .upload-area:hover, .upload-area.dragover { border-color:rgba(255,255,255,0.8); background:rgba(255,255,255,0.08); }
+        .upload-area .icon { font-size:40px; margin-bottom:10px; }
+        .upload-area p { color:rgba(255,255,255,0.8); margin:0; font-size:15px; }
+        .upload-area small { color:rgba(255,255,255,0.5); font-size:12px; }
+        #file-input { display:none; }
+
+        .preview-wrap { width:100%; background:rgba(255,255,255,0.08); border-radius:14px; overflow:hidden; display:none; }
+        .preview-header { display:flex; justify-content:space-between; align-items:center; padding:14px 18px; border-bottom:1px solid rgba(255,255,255,0.15); }
+        .preview-header span { color:white; font-weight:600; }
+        .preview-header small { color:rgba(255,255,255,0.5); font-size:12px; }
+        .table-scroll { overflow-x:auto; max-height:320px; overflow-y:auto; }
+        table { width:100%; border-collapse:collapse; font-size:13px; }
+        thead th { background:rgba(255,255,255,0.12); color:rgba(255,255,255,0.7); padding:10px 12px; text-align:left; position:sticky; top:0; font-weight:600; }
+        tbody td { color:white; padding:9px 12px; border-bottom:1px solid rgba(255,255,255,0.07); }
+        tbody tr:last-child td { border-bottom:none; }
+
+        .row-status { font-size:11px; padding:2px 8px; border-radius:10px; font-weight:600; }
+        .row-status.ok    { background:#10b98133; color:#6ee7b7; border:1px solid #10b98155; }
+        .row-status.erro  { background:#ef444433; color:#fca5a5; border:1px solid #ef444455; }
+
+        .erros-wrap { width:100%; padding:14px 18px; background:rgba(239,68,68,0.15); border:1px solid rgba(239,68,68,0.3); border-radius:12px; display:none; }
+        .erros-wrap p  { color:#fca5a5; margin:0 0 8px; font-weight:600; font-size:14px; }
+        .erros-wrap ul { color:#fca5a5; font-size:13px; margin:0; padding-left:18px; }
+
+        .acoes { display:flex; gap:12px; width:100%; }
+        .btn-importar { flex:1; padding:14px; background:#10b981; color:white; border:none; border-radius:12px; font-size:16px; font-weight:600; cursor:pointer; transition:0.2s; display:none; }
+        .btn-importar:hover:not(:disabled) { background:#059669; }
+        .btn-importar:disabled { opacity:0.5; cursor:not-allowed; }
+        .btn-limpar { padding:14px 20px; background:rgba(255,255,255,0.15); color:white; border:none; border-radius:12px; font-size:15px; cursor:pointer; transition:0.2s; display:none; }
+        .btn-limpar:hover { background:rgba(255,255,255,0.25); }
+
+        .progresso-wrap { width:100%; display:none; }
+        .progresso-bar-bg { width:100%; height:10px; background:rgba(255,255,255,0.15); border-radius:10px; overflow:hidden; }
+        .progresso-bar { height:100%; background:#10b981; border-radius:10px; transition:width 0.3s; width:0%; }
+        .progresso-txt { color:rgba(255,255,255,0.7); font-size:13px; margin-top:8px; text-align:center; }
+
+        .resultado { width:100%; padding:16px 20px; background:rgba(16,185,129,0.15); border:1px solid rgba(16,185,129,0.3); border-radius:12px; color:#6ee7b7; font-size:14px; display:none; }
+        .modelo-link { color:rgba(255,255,255,0.55); font-size:13px; text-decoration:none; display:flex; align-items:center; gap:6px; }
+        .modelo-link:hover { color:white; }
+
+        /* Aviso de colunas */
+        .info-box { width:100%; padding:12px 16px; background:rgba(255,255,255,0.08); border-radius:12px; color:rgba(255,255,255,0.7); font-size:13px; }
+        .info-box code { background:rgba(255,255,255,0.15); padding:1px 5px; border-radius:4px; font-size:12px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <img src="assets/image/logo-fatec-capao-bonito.png" alt="Fatec Capão Bonito" class="logo-fatec">
+
+        <h1>AACC</h1>
+        <p style="color:rgba(255,255,255,0.7); margin:0; font-size:15px;">Importar lista de alunos</p>
+
+        <div class="info-box">
+            A planilha deve ter as colunas: <code>ra</code>, <code>nome</code>, <code>email</code>, <code>cpf</code>, <code>curso</code>.<br><br>
+            O campo <b>curso</b> deve conter o <b>número</b> do curso, ex: <br>1 - para Agroindústria; <br>2 - para Gestão Empresarial; <br>3 - para Mecanização em Agricultura de Precisão; <br>4 - para Silvicultura; <br>5 - para Sistemas Inteligentes.
+        </div>
+
+        <div class="upload-area" id="upload-area" onclick="document.getElementById('file-input').click()">
+            <div class="icon">📂</div>
+            <p>Clique ou arraste o arquivo aqui</p>
+            <small>Aceita .xlsx, .xls e .csv</small>
+        </div>
+        <input type="file" id="file-input" accept=".xlsx,.xls,.csv">
+
+        <div class="erros-wrap" id="erros-wrap">
+            <p>⚠️ Problemas encontrados:</p>
+            <ul id="erros-list"></ul>
+        </div>
+
+        <div class="preview-wrap" id="preview-wrap">
+            <div class="preview-header">
+                <span id="preview-titulo">Prévia</span>
+                <small id="preview-count"></small>
+            </div>
+            <div class="table-scroll">
+                <table>
+                    <thead>
+                        <tr><th>#</th><th>RA</th><th>NOME</th><th>EMAIL</th><th>CPF</th><th>CURSO</th><th>STATUS</th></tr>
+                    </thead>
+                    <tbody id="preview-body"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="progresso-wrap" id="progresso-wrap">
+            <div class="progresso-bar-bg"><div class="progresso-bar" id="progresso-bar"></div></div>
+            <p class="progresso-txt" id="progresso-txt">Importando...</p>
+        </div>
+
+        <div class="resultado" id="resultado"></div>
+
+        <div class="acoes">
+            <button class="btn-limpar" id="btn-limpar" onclick="limpar()">✕ Limpar</button>
+            <button class="btn-importar" id="btn-importar" onclick="importar()">⬆ Importar alunos</button>
+        </div>
+
+        <a href="modelo_alunos.xlsx" download class="modelo-link">⬇ Baixar planilha modelo</a>
+        <button onclick="window.location.href='adm.html'" style="margin-top:4px;">← Voltar ao painel</button>
+    </div>
+
+    <script type="module">
+        import { supabase } from './supabase.js';
+
+        if (sessionStorage.getItem('adm') !== 'ok') window.location.href = 'adm_login.html';
+
+        window._supabase = supabase;
+
+        let dadosValidos = [];
+
+        // Drag & drop
+        const area = document.getElementById('upload-area');
+        area.addEventListener('dragover', e => { e.preventDefault(); area.classList.add('dragover'); });
+        area.addEventListener('dragleave', () => area.classList.remove('dragover'));
+        area.addEventListener('drop', e => { e.preventDefault(); area.classList.remove('dragover'); const f = e.dataTransfer.files[0]; if (f) processarArquivo(f); });
+        document.getElementById('file-input').addEventListener('change', e => { if (e.target.files[0]) processarArquivo(e.target.files[0]); });
+
+        function processarArquivo(file) {
+            limpar(false);
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const wb = XLSX.read(e.target.result, { type: 'array' });
+                    const ws = wb.Sheets[wb.SheetNames[0]];
+                    const rows = XLSX.utils.sheet_to_json(ws, { defval: '' });
+                    validarEPrevisar(rows);
+                } catch { document.getElementById('progresso-txt').textContent = 'Erro ao ler o arquivo.'; }
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        function norm(k) {
+            return k.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]/g,'');
+        }
+
+        function campo(row, ...nomes) {
+            for (const k of Object.keys(row)) {
+                if (nomes.some(n => norm(k).includes(n))) return String(row[k]).trim();
+            }
+            return '';
+        }
+
+        function validarEPrevisar(rows) {
+            const erros = [];
+            dadosValidos = [];
+            const previa = [];
+
+            if (!rows.length) erros.push('Planilha vazia.');
+
+            rows.forEach((row, i) => {
+                const ra           = campo(row, 'ra', 'registro', 'matricula');
+                const nome         = campo(row, 'nome', 'name', 'aluno');
+                const email        = campo(row, 'email', 'mail');
+                const cpf          = campo(row, 'cpf');
+                // Aceita id_curso (número direto) ou curso (nome do curso)
+                const idCursoRaw   = campo(row, 'idcurso', 'id_curso');
+                const nomeCurso    = campo(row, 'curso', 'course', 'graduacao');
+                const cursoExibir  = idCursoRaw || nomeCurso || '—';
+                const linha = i + 2;
+
+                if (!ra || isNaN(parseInt(ra))) {
+                    erros.push(`Linha ${linha}: R.A. inválido ou vazio`);
+                    previa.push({ ra, nome, email, cpf, curso: cursoExibir, status: 'erro' });
+                } else if (!nome) {
+                    erros.push(`Linha ${linha}: Nome vazio (R.A.: ${ra})`);
+                    previa.push({ ra, nome, email, cpf, curso: cursoExibir, status: 'erro' });
+                } else {
+                    dadosValidos.push({
+                        ra: parseInt(ra), nome, email, cpf,
+                        idCursoDirecto: idCursoRaw ? parseInt(idCursoRaw) : null,
+                        nomeCurso: nomeCurso || null
+                    });
+                    previa.push({ ra, nome, email, cpf, curso: cursoExibir, status: 'ok' });
+                }
+            });
+
+            // Erros
+            const errosWrap = document.getElementById('erros-wrap');
+            if (erros.length) {
+                document.getElementById('erros-list').innerHTML = erros.map(e => `<li>${e}</li>`).join('');
+                errosWrap.style.display = 'block';
+            }
+
+            // Preview
+            document.getElementById('preview-body').innerHTML = previa.map((r, i) => `
+                <tr>
+                    <td style="color:rgba(255,255,255,0.4);">${i+1}</td>
+                    <td>${r.ra}</td><td>${r.nome}</td><td>${r.email||'—'}</td>
+                    <td>${r.cpf||'—'}</td><td>${r.curso||'—'}</td>
+                    <td><span class="row-status ${r.status}">${r.status === 'ok' ? 'OK' : 'Erro'}</span></td>
+                </tr>
+            `).join('');
+
+            document.getElementById('preview-titulo').textContent = `Prévia — ${previa.length} linha(s)`;
+            document.getElementById('preview-count').textContent = `${dadosValidos.length} válida(s)${erros.length ? `, ${erros.length} com erro` : ''}`;
+            document.getElementById('preview-wrap').style.display = 'block';
+            if (dadosValidos.length) document.getElementById('btn-importar').style.display = 'block';
+            document.getElementById('btn-limpar').style.display = 'block';
+        }
+
+        // ── Cache de cursos para não repetir inserts ──
+        const cursoCache = {};
+
+        async function obterIdCurso(supabase, nomeCurso) {
+            if (!nomeCurso) return null;
+            const key = nomeCurso.toLowerCase();
+            if (cursoCache[key]) return cursoCache[key];
+
+            // Busca existente
+            const { data } = await supabase.from('curso').select('id').ilike('nome_curso', nomeCurso).single();
+            if (data) { cursoCache[key] = data.id; return data.id; }
+
+            // Cria novo
+            const { data: novo } = await supabase.from('curso').insert({ nome_curso: nomeCurso }).select('id').single();
+            if (novo) { cursoCache[key] = novo.id; return novo.id; }
+
+            return null;
+        }
+
+        window.importar = async () => {
+            if (!dadosValidos.length) return;
+            const supabase = window._supabase;
+            const btn = document.getElementById('btn-importar');
+            const progWrap = document.getElementById('progresso-wrap');
+            const progBar  = document.getElementById('progresso-bar');
+            const progTxt  = document.getElementById('progresso-txt');
+            const resultado = document.getElementById('resultado');
+
+            btn.disabled = true;
+            progWrap.style.display = 'block';
+            resultado.style.display = 'none';
+
+            let inseridos = 0, erros = 0;
+            const total = dadosValidos.length;
+
+            for (let i = 0; i < total; i++) {
+                const { ra, nome, email, cpf, idCursoDirecto, nomeCurso } = dadosValidos[i];
+
+                // Usa id direto se disponível, senão busca/cria pelo nome
+                let id_curso = idCursoDirecto;
+                if (!id_curso && nomeCurso) {
+                    id_curso = await obterIdCurso(supabase, nomeCurso);
+                }
+
+                const { error } = await supabase
+                    .from('aluno')
+                    .upsert({ ra, nome, email, cpf, id_curso }, { onConflict: 'ra' });
+
+                if (error) erros++;
+                else inseridos++;
+
+                const pct = Math.round(((i + 1) / total) * 100);
+                progBar.style.width = pct + '%';
+                progTxt.textContent = `Importando ${i + 1} de ${total}...`;
+            }
+
+            progTxt.textContent = 'Concluído!';
+            resultado.style.display = 'block';
+            resultado.innerHTML = `
+                ✅ Importação concluída!<br>
+                <span style="opacity:0.8; font-size:13px;">
+                    ${inseridos} inserido(s)/atualizado(s)
+                    ${erros ? ` · ${erros} com erro` : ''}
+                </span>
+            `;
+            btn.disabled = false;
+        };
+
+        window.limpar = (resetInput = true) => {
+            dadosValidos = [];
+            ['preview-wrap','erros-wrap','progresso-wrap','resultado'].forEach(id => {
+                document.getElementById(id).style.display = 'none';
+            });
+            ['btn-importar','btn-limpar'].forEach(id => {
+                document.getElementById(id).style.display = 'none';
+            });
+            document.getElementById('preview-body').innerHTML = '';
+            document.getElementById('erros-list').innerHTML = '';
+            document.getElementById('progresso-bar').style.width = '0%';
+            if (resetInput) document.getElementById('file-input').value = '';
+        };
+    </script>
+</body>
+</html>
