@@ -20,9 +20,24 @@ body {
 }
 
 /* Logo da faculdade */
-.logo-fatec {
+/* .logo-fatec {
     width: 220px;
     margin-bottom: 24px;
+} */
+
+/* Cabeçalho */
+.cabecalho {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    border-bottom: 2px solid #fff;
+    margin: 0 auto 50px;
+    padding: 20px;
+    height: 15vh;
+}
+
+.cabecalho-imagem {
+    width: 100px;
 }
 
 /* TOPO CORRETO */
