@@ -3,20 +3,29 @@
     margin: 0;
     padding: 0;
     box-sizing: border-box;
+    font-family: Roboto, sans-serif;
 }
 
-/* Fundo da página */
-body {
+/* Fundo da página antigo */
+/* body {
     font-family: Roboto, sans-serif;
     min-height: 100vh;
     display: flex;
     flex-direction: column;
-    /* importante */
+    <!-- importante -->
     align-items: center;
     justify-content: center;
 
     background: linear-gradient(rgba(0, 0, 0, 0.222), #415660);
     margin: 20px 0;
+} */
+
+body {
+    min-height: 100vh;
+    background: linear-gradient(rgba(0, 0, 0, 0.222), #415660);
+    margin: 5px 5px;
+    border: 2px solid #fff;
+    border-radius: 0 35px;
 }
 
 /* Logo da faculdade */
