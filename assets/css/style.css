@@ -26,6 +26,10 @@ body {
     margin: 5px 5px;
     border: 2px solid #fff;
     border-radius: 0 35px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
 }
 
 /* Logo da faculdade */
